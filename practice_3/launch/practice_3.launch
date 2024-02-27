@@ -11,6 +11,12 @@
         <param name="waypoints_file"    value="$(find common)/data/trajectories/$(arg waypoints_file)" />
     </node>
 
+    <!-- Waypoint follower -->
+    <node pkg="practice_3" type="pure_pursuit_follower.py" name="pure_pursuit_follower" output="screen" required="true" >
+        <param name="lookahead_distance"  value="$(arg lookahead_distance)" />
+        <remap from="path" to="global_path"/>
+    </node>
+
     <!-- Global path visualizer -->
     <node pkg="practice_3" type="global_path_visualizer.py" name="global_path_visualizer" output="screen" required="true" />
 
