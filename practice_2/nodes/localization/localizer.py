@@ -41,7 +41,7 @@ class Localizer:
         local_y = local_y - self.origin_y
         local_z = msg.height - self.undulation
         azimuth_correction = self.utm_projection.get_factors(msg.longitude, msg.latitude).meridian_convergence
-        x, y, z, w = quaternion_from_euler(0, 0, self.convert_azimuth_to_yaw((msg.azimuth + azimuth_correction) * math.pi / 180))
+        x, y, z, w = quaternion_from_euler(0, 0, self.convert_azimuth_to_yaw((msg.azimuth - azimuth_correction) * math.pi / 180))
         local_quaternion = Quaternion(x, y, z, w)
 
         # Create current pose message
