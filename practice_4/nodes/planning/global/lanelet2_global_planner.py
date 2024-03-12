@@ -102,7 +102,7 @@ class GlobalPlanner:
             if 'speed_ref' in lanelet.attributes:
                 speed = min(float(lanelet.attributes['speed_ref']) / 3.6, self.speed_limit / 3.6)
             else:
-                speed = self.speed_limit
+                speed = self.speed_limit / 3.6
             for i, point in enumerate(lanelet.centerline):
                 # Check and omit for first waypoint of every lanelet except very first lanelet
                 if i == 0 and j != 0:
