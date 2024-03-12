@@ -46,8 +46,6 @@ class GlobalPlanner:
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.goal_callback, queue_size=1)
         rospy.Subscriber('/localization/current_pose', PoseStamped, self.current_pose_callback, queue_size=1)
 
-        return
-
     def goal_callback(self, msg):
         # Current location check
         if self.current_location is None:
@@ -94,7 +92,6 @@ class GlobalPlanner:
             self.publish_lane_from_waypoints_list([])
             self.goal_point = None
             rospy.loginfo("%s - goal position reached, cleared path", rospy.get_name())
-            return
 
     def convert_laneletseq_to_waypoints_list(self, laneletseq):
         waypoints = []
@@ -103,7 +100,7 @@ class GlobalPlanner:
         for j, lanelet in enumerate(laneletseq):
             # Obtain speed from lanelet or global speed
             if 'speed_ref' in lanelet.attributes:
-                speed = min(float(lanelet.attributes['speed_ref']) / 3.6, self.speed_limit)
+                speed = min(float(lanelet.attributes['speed_ref']) / 3.6, self.speed_limit / 3.6)
             else:
                 speed = self.speed_limit
             for i, point in enumerate(lanelet.centerline):
@@ -117,11 +114,12 @@ class GlobalPlanner:
                 waypoint.twist.twist.linear.x = speed
                 waypoints.append(waypoint)
 
-                # Find the waypoint closest to endpoint
-                distance_to_goal_endpoint = ((point.x - self.goal_point.x) ** 2 + (point.y - self.goal_point.y) ** 2) ** 0.5
-                if distance_to_goal_endpoint < min_distance_to_goal_endpoint:
-                    min_distance_to_goal_endpoint = distance_to_goal_endpoint
-                    closest_waypoint = waypoint
+                # Find the waypoint closest to endpoint in the last lanelet
+                if j == len(laneletseq) - 1:
+                    distance_to_goal_endpoint = ((point.x - self.goal_point.x) ** 2 + (point.y - self.goal_point.y) ** 2) ** 0.5
+                    if distance_to_goal_endpoint < min_distance_to_goal_endpoint:
+                        min_distance_to_goal_endpoint = distance_to_goal_endpoint
+                        closest_waypoint = waypoint
 
         # Update goal point and return shortened list of waypoints
         if closest_waypoint is not None:

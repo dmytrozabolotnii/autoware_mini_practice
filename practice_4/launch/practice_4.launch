@@ -4,7 +4,7 @@
     <arg name="waypoints_file"      default="waypoints_1m.csv"  doc="waypoints file name" />
     <arg name="lookahead_distance"  default="5"                 doc="lookahead distance" />
     <arg name="lanelet2_map_name"   default="tartu_demo.osm"    doc="map file name" />
-    <arg name="speed_limit"         default="11.1"              doc="speed limit in km/h" />
+    <arg name="speed_limit"         default="40"                doc="speed limit in km/h" />
 
     <!-- Nodes -->
 
