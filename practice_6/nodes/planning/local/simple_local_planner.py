@@ -132,8 +132,9 @@ class SimpleLocalPlanner:
                 object_velocities.append(velocity.x)
                 is_obstacle_array.append(1)
         # Stop point adding
-        if local_path_buffer.intersects(Point(global_path_linestring.coords[-1])):
-            objects_distances_from_path_start.append(local_path.project(Point(global_path_linestring.coords[-1])))
+        end_stop_point = Point(global_path_linestring.coords[-1])
+        if local_path.dwithin(end_stop_point, self.braking_safety_distance_goal):
+            objects_distances_from_path_start.append(local_path.project(end_stop_point))
             object_velocities.append(0)
             is_obstacle_array.append(0)
         # Numpifying
