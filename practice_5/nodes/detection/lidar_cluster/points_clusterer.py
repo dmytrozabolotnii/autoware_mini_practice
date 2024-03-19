@@ -29,7 +29,8 @@ class PointsClusterer:
         points = structured_to_unstructured(data[['x', 'y', 'z']], dtype=np.float32)
         # Clustering
         labelled = self.clusterer.fit_predict(points)
-        assert len(labelled) == len(points), 'lengths should be equal'
+        assert len(labelled) == len(points), (rospy.get_name() +
+                                              'raw points and clustered points should be the same size')
         # Stacking
         points_labeled = np.concatenate((points, labelled[:, np.newaxis]), axis=1)
         # Filtering out non-clustered noise

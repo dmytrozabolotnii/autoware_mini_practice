@@ -49,7 +49,7 @@ class ClusterDetector:
             # turn into homogeneous coordinates
             points_copy[:, 3] = 1
             # transform points to target frame
-            points_copy = points.dot(tf_matrix.T)
+            points_copy = points_copy.dot(tf_matrix.T)
             # write converted coordinates back
             points[:, :3] = points_copy[:, :3]
 
@@ -57,8 +57,10 @@ class ClusterDetector:
         result_object_array.header.stamp = msg.header.stamp
         result_object_array.header.frame_id = self.output_frame
 
-        for i in range(int(max(points[:, 3]))):
+        for i in range(int(max(points[:, 3]) + 1)):
             obj = DetectedObject()
+            obj.header.stamp = msg.header.stamp
+            obj.header.frame_id = self.output_frame
             # Find all points with a label
             points3d = points[points[:, 3] == i, :3]
             # Filter out min cluster size
@@ -95,6 +97,7 @@ class ClusterDetector:
 
     def run(self):
         rospy.spin()
+
 
 if __name__ == '__main__':
     rospy.init_node('cluster_detector', log_level=rospy.INFO)
