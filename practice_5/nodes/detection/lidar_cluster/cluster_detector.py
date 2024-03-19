@@ -34,6 +34,14 @@ class ClusterDetector:
         data = numpify(msg)
         points = structured_to_unstructured(data[['x', 'y', 'z', 'label']], dtype=np.float32)
 
+        result_object_array = DetectedObjectArray()
+        result_object_array.header.stamp = msg.header.stamp
+        result_object_array.header.frame_id = self.output_frame
+
+        if len(points) == 0:
+            self.objects_pub.publish(result_object_array)
+            return
+
         if msg.header.frame_id != self.output_frame:
             # fetch transform for target frame
             try:
@@ -52,10 +60,6 @@ class ClusterDetector:
             points_copy = points_copy.dot(tf_matrix.T)
             # write converted coordinates back
             points[:, :3] = points_copy[:, :3]
-
-        result_object_array = DetectedObjectArray()
-        result_object_array.header.stamp = msg.header.stamp
-        result_object_array.header.frame_id = self.output_frame
 
         for i in range(int(max(points[:, 3]) + 1)):
             obj = DetectedObject()
