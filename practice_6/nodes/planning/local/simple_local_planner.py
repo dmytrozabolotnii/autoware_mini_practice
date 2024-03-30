@@ -79,7 +79,7 @@ class SimpleLocalPlanner:
 
     def current_velocity_callback(self, msg):
         # save current velocity
-        self.current_speed = msg.twist.linear.xmsg.header.frame_id
+        self.current_speed = msg.twist.linear.x
 
     def current_pose_callback(self, msg):
         # save current pose
