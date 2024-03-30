@@ -79,7 +79,7 @@ class SimpleLocalPlanner:
 
     def current_velocity_callback(self, msg):
         # save current velocity
-        self.current_speed = msg.twist.linear.x
+        self.current_speed = msg.twist.linear.xmsg.header.frame_id
 
     def current_pose_callback(self, msg):
         # save current pose
@@ -87,15 +87,17 @@ class SimpleLocalPlanner:
         self.current_position = current_position
 
     def detected_objects_callback(self, msg):
-        if self.global_path_linestring is None or self.current_position is None or self.current_speed is None:
-            self.publish_local_path_wp([], msg.header.stamp, msg.header.frame_id)
-            return
-        # Copy variables for callback
         with self.lock:
             global_path_linestring = self.global_path_linestring
             global_path_distances = self.global_path_distances
             distance_to_velocity_interpolator = self.distance_to_velocity_interpolator
             current_position = self.current_position
+
+        if (global_path_linestring is None or global_path_distances is None
+                or distance_to_velocity_interpolator is None or current_position is None):
+            self.publish_local_path_wp([], msg.header.stamp, msg.header.frame_id)
+            return
+        # Copy variables for callback
         # Extract local path
         d_ego_from_path_start = global_path_linestring.project(current_position)
         local_path = self.extract_local_path(global_path_linestring, global_path_distances, d_ego_from_path_start, self.local_path_length)
@@ -108,8 +110,13 @@ class SimpleLocalPlanner:
         local_path_buffer = local_path.buffer(self.stopping_lateral_distance, cap_style="flat")
         prepare(local_path_buffer)
         # Prepare transform to base link
-        transform = self.tf_buffer.lookup_transform("base_link", msg.header.frame_id, msg.header.stamp,
-                                                    rospy.Duration(self.transform_timeout))
+        try:
+            transform = self.tf_buffer.lookup_transform("base_link", msg.header.frame_id, msg.header.stamp,
+                                                        rospy.Duration(self.transform_timeout))
+        except (TransformException, rospy.ROSTimeMovedBackwardsException) as e:
+            rospy.logwarn("%s - %s", rospy.get_name(), e)
+            return
+
         # Intersection and object distances calculation
         objects_distances_from_path_start = []
         object_velocities = []
@@ -154,7 +161,7 @@ class SimpleLocalPlanner:
             closest_object_velocity = object_velocities[np.argmin(calculated_target_velocities)]
             closest_object_braking = object_braking_distances[np.argmin(calculated_target_velocities)]
             stopping_point_distance = (objects_distances_from_path_start[np.argmin(calculated_target_velocities)] -
-                                       self.braking_reaction_time * closest_object_velocity - closest_object_braking)
+                                       - closest_object_braking)
 
             target_velocity = min(distance_to_velocity_interpolator(d_ego_from_path_start), np.min(calculated_target_velocities))
             local_path_blocked = np.max(is_obstacle_array) > 0
@@ -168,7 +175,7 @@ class SimpleLocalPlanner:
         # Waypoints
         local_path_waypoints = self.convert_local_path_to_waypoints(local_path, target_velocity)
         # Publish waypoints
-        self.publish_local_path_wp(local_path_waypoints, msg.header.stamp, msg.header.frame_id, closest_object_distance,
+        self.publish_local_path_wp(local_path_waypoints, msg.header.stamp, self.output_frame, closest_object_distance,
                                                                 closest_object_velocity, local_path_blocked, stopping_point_distance)
 
     def extract_local_path(self, global_path_linestring, global_path_distances, d_ego_from_path_start, local_path_length):
