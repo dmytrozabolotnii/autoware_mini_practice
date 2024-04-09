@@ -114,8 +114,8 @@ class SimpleLocalPlanner:
             transform = self.tf_buffer.lookup_transform("base_link", msg.header.frame_id, msg.header.stamp,
                                                         rospy.Duration(self.transform_timeout))
         except (TransformException, rospy.ROSTimeMovedBackwardsException) as e:
+            transform = None
             rospy.logwarn("%s - %s", rospy.get_name(), e)
-            return
 
         # Intersection and object distances calculation
         objects_distances_from_path_start = []
