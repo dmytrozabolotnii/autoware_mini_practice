@@ -130,7 +130,7 @@ class CameraTrafficLightDetector:
             rospy.logwarn_throttle(10, "%s - No camera model received, skipping image", rospy.get_name())
             return
 
-        if stoplines_on_path is None or transform_from_frame is None:
+        if stoplines_on_path is None:
             rospy.logwarn_throttle(10, "%s - No path received, skipping image", rospy.get_name())
             return
 
@@ -153,7 +153,6 @@ class CameraTrafficLightDetector:
 
             rois = self.calculate_roi_coordinates(stoplines_on_path, transform)
         # Generate classification for rois
-        predictions = []
         classes = []
         scores = []
         if len(rois) > 0:
